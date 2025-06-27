@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyScrappers - Join Game</title>
+    <meta name="description" content="Join SkyScrappers multiplayer game">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .message {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            font-weight: 500;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .fallback {
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏗️ SkyScrappers</div>
+        <div class="message" id="message">
+            Opening SkyScrappers to join the game...
+        </div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>If the app doesn't open automatically, click the button below</p>
+        </div>
+        <a href="#" class="button" id="openApp" style="display: none;">Open SkyScrappers</a>
+        <div class="fallback">
+            <p>Don't have the app? Download it from the app store!</p>
+            <a href="#" class="button" id="downloadApp">Download App</a>
+        </div>
+    </div>
+
+    <script>
+        // Get the join code from the URL
+        function getJoinCode() {
+            const path = window.location.pathname;
+            // Match /join/CODE or /skyscrapers/join/CODE
+            const match = path.match(/\/(?:skyscrapers\/)?join\/([^\/\?]+)/);
+            return match ? match[1] : null;
+        }
+
+        // Create the deep link URL
+        function createDeepLink(joinCode) {
+            return `skyscrapers://join/${joinCode}`;
+        }
+
+        // Validate join code format
+        function isValidJoinCode(code) {
+            if (!code) return false;
+            // 4-8 alphanumeric characters
+            return /^[a-zA-Z0-9]{4,8}$/.test(code);
+        }
+
+        // Try to open the app
+        function openApp() {
+            const joinCode = getJoinCode();
+            
+            if (!joinCode) {
+                showError('Invalid join link! No join code found.');
+                return;
+            }
+
+            if (!isValidJoinCode(joinCode)) {
+                showError(`Invalid join code format: ${joinCode}`);
+                return;
+            }
+
+            const deepLink = createDeepLink(joinCode);
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('message').textContent = `Opening SkyScrappers to join room: ${joinCode}`;
+            
+            // Try to open the app
+            window.location.href = deepLink;
+            
+            // Fallback: if app doesn't open after 3 seconds, show manual button
+            setTimeout(() => {
+                document.getElementById('openApp').style.display = 'inline-block';
+                document.getElementById('message').textContent = 'App not opened automatically. Click the button below to open SkyScrappers.';
+            }, 3000);
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerHTML = `<div class="error">❌ ${message}</div>`;
+            document.getElementById('message').textContent = 'Unable to open SkyScrappers';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerHTML = `<div class="success">✅ ${message}</div>`;
+        }
+
+        // Handle manual app opening
+        document.getElementById('openApp').addEventListener('click', function(e) {
+            e.preventDefault();
+            openApp();
+        });
+
+        // Handle download button
+        document.getElementById('downloadApp').addEventListener('click', function(e) {
+            e.preventDefault();
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            if (userAgent.includes('android')) {
+                // Android Play Store link - UPDATE THIS WITH YOUR ACTUAL LINK
+                window.open('https://play.google.com/store/apps/details?id=com.novospir.skyscrapers', '_blank');
+            } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+                // iOS App Store link - UPDATE THIS WITH YOUR ACTUAL LINK
+                window.open('https://apps.apple.com/app/skyscrappers/id123456789', '_blank');
+            } else {
+                // Fallback for desktop or other devices
+                alert('Please search for "SkyScrappers" in your app store!');
+            }
+        });
+
+        // Auto-open app when page loads
+        window.addEventListener('load', function() {
+            const joinCode = getJoinCode();
+            
+            if (joinCode && isValidJoinCode(joinCode)) {
+                // Small delay to ensure page is fully loaded
+                setTimeout(openApp, 500);
+            } else if (joinCode) {
+                showError(`Invalid join code format: ${joinCode}`);
+            } else {
+                showError('Invalid join link! No join code found.');
+            }
+        });
+
+        // Handle page visibility change (when user returns from app)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // User returned to the page, show success message
+                const joinCode = getJoinCode();
+                if (joinCode && isValidJoinCode(joinCode)) {
+                    showSuccess('Welcome back! If the app didn\'t open, try clicking the button above.');
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
